@@ -1,6 +1,6 @@
 SHIP DISTANCE PACKAGE 
 
-THE PACKAGE CONTAIN THREE BASH SCRIPTS AND TWO MATLAB FUNCTIONS: 
+	THE PACKAGE CONTAIN THREE BASH SCRIPTS AND TWO MATLAB FUNCTIONS: 
 	  ShipDistance (Calculates the distance covered by the given ship) 
 	  BestShip (Finds the ship that covered the biggest distance in zone 1)
 	  MVPShip (Finds the the ship that covered the biggest distance from all zones)

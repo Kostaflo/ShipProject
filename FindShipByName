@@ -1,0 +1,4 @@
+#!/bin/bash
+#  Usage : FindShipByName  shipname
+
+grep -i "$1"  shipsNAME-IMO.txt

@@ -1,0 +1,18 @@
+#!/bin/bash
+#Usage: ShipDistance shipname 
+#This bash script will calculate the distance covered by the given ship 
+
+#Using FindShipByName to insert ship's IMO in the variable IMO
+IMO=$(./FindShipByName "$1"| cut -d "," -f 2)
+
+#Deleting previous files
+rm -rf tmpship.csv
+
+#Senting ships coordinates to tmpship.csv file
+cat PerShip/$IMO.csv > tmpship.csv
+
+#Calling octave script to calculate ship's covered distance and inserting it to variable distance
+distance=$(octave --no-window-system --silent --eval "disp(sprintf('%.3f', FindShipDistance('tmpship.csv')));")
+
+#Printing Ship's IMO(only the numbers) and covered distance
+echo "$(echo "$IMO" | cut -c4-), $distance"

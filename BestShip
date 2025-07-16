@@ -1,0 +1,28 @@
+#!/bin/bash
+#Usage: BestShip
+#This Bash script finds the ship that covered the biggest distance 
+
+#Initializing MaxIMO and max 
+maxIMO="none"
+max=0
+
+#starting a while loop for all ships in shipsName-IMO.txt
+#inserting ships name to ship and IMO code to imo
+while IFS=, read -r ship imo; do 
+	#Checking if one of those two variables are empty. 
+	#If its true i skip to the next ship
+	[[ -z "$ship" || -z "$imo" ]] && continue
+	
+	#calling ShipDistance to calculate ships covered distance and insert it to Distance
+	Distance=$(./ShipDistance "$ship" | cut -d "," -f2)
+	#Checking if Distance is bigger than max
+	#if true then insert it to max and Ships IMO to maxIMO
+	if (( $(echo "$Distance > $max" | bc -l) ));  then
+		max=$Distance
+		maxIMO=$(grep "$ship" shipsNAME-IMO.txt | cut -d "," -f2 )
+	fi 
+done < shipsNAME-IMO.txt
+
+#print Best Ship's IMO(without the numbers) and the max distance that covered
+echo "$(echo "$maxIMO" | cut -c4-), $max"
+	

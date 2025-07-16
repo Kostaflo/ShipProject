@@ -1,0 +1,78 @@
+#!/bin/bash
+#Usage: MVPShip
+#This script finds the ship that covered the biggest distance from all the ships in https://prometheus.dmst.aueb.gr/datamines
+
+#Downloading all files needed from the internet and unzip them 
+wget -r -np -nd -A "AIS*.zip" https://prometheus.dmst.aueb.gr/datamines/ 
+unzip '*.zip'
+
+
+echo loading .../ it will take about 18 minutes so be patient
+echo DO NOT TURN OFF YOUR COMPUTER
+
+#Deleting the first line from each of these files
+for i in {1..9}
+do
+	sed -i '1d' "$HOME/ShipProject/AIS_ASCII_by_UTM_Month/2015/AIS_2015_01_Zone0$i.csv" 
+done
+
+#for each file make a ShipsNAME-IMO.txt a shipsIMO.txt and a PerShip directory
+for i in {1..9}
+do
+	# I just want to have a file containing ShipName and IMO
+	cut -f 8,9 -d "," "$HOME/ShipProject/AIS_ASCII_by_UTM_Month/2015/AIS_2015_01_Zone0$i.csv" | sort | uniq > "shipsNAME-IMO$i.txt"
+	
+	# I need to have a full list of all ships IMO
+	cut -f 9 -d "," "$HOME/ShipProject/AIS_ASCII_by_UTM_Month/2015/AIS_2015_01_Zone0$i.csv" | sort | uniq > "shipsIMO$i.txt"
+	
+	# All results will be in a fresh PerShip Catalog
+	rm -rf PerShip$i
+	mkdir PerShip$i
+
+
+	for Ship in $(cat "shipsIMO$i.txt") #For all ships appearing in file shipsIMO.txt
+	do
+		grep "$Ship"  "$HOME/ShipProject/AIS_ASCII_by_UTM_Month/2015/AIS_2015_01_Zone0$i.csv" |sort | cut -f 3,4 -d ","  > PerShip$i/$Ship.csv
+	done
+
+done
+
+#Initializing mvp and mvpIMO
+mvp=0
+mvpIMO="none"
+
+#i go threw all the files to find the best from each and then i compare it with mvp to find the best of all
+for i in {1..9}
+do
+	#Initializing max maxIMO
+	max=0
+	maxIMO="none"
+	
+	#from each PerShip catalog i find the best ship and put it in max, maxIMO variables
+	while IFS=, read -r ship imo; do
+		[[ -z "$ship" || -z "$imo" ]] && continue #making sure imo and ship are not empty. If they are skip
+		
+		rm -rf tmpship.csv #need a fresh file
+
+		#Senting ships coordinates to tmpship.csv file
+		cat "PerShip$i"/$imo.csv > tmpship.csv
+
+		#Calling octave script to calculate ship's covered distance and inserting it to variable distance
+		distance=$(octave --no-window-system --silent --eval "disp(sprintf('%.3f', FindShipDistance('tmpship.csv')));")
+		
+		if (( $(echo "$distance > $max" | bc -l) ));  then
+                	max=$distance
+                	maxIMO=$imo        	
+		fi
+
+	done < "shipsNAME-IMO$i.txt" #for all ships in shipNAME-IMO
+	
+	#checking if max is bigger than mvp 
+	if (( $(echo "$max > $mvp" | bc -l) ));  then
+		mvp=$max		#if true max becomes mvp
+		mvpIMO=$maxIMO
+	fi
+done
+
+echo "$mvpIMO", "$mvp" #printing the mvp aka best of all ships and the distance tha covered
+
